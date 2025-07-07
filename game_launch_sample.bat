@@ -6,9 +6,6 @@
 set "gameName=Game Name"
 set "basePath=%USERPROFILE%\Desktop\bat"
 set "logPath=%USERPROFILE%\Desktop\log.txt"
-
-:: Create exit.bat, which runs after the NFC tag is removed from the reader
-:: and deletes itself after it runs.
 set "exitPath=%basePath%\exit.bat"
 (
 	echo @echo off
