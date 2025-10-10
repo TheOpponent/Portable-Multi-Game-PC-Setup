@@ -1,5 +1,5 @@
 # nfcread.py
-# Uses nfcpy to drive an NFC tag reader to continuously scan for 
+# Uses nfcpy to drive an NFC tag reader to continuously scan for
 # supported tags. Commands can be executed based on tag IDs.
 
 # This file is in the public domain (Unlicense). https://unlicense.org
@@ -9,6 +9,34 @@ import subprocess
 import time
 
 import nfc
+from serial import SerialException
+
+
+class NFCConfig:
+    """Class for NFC reader configuration."""
+
+    def __init__(self):
+        self.clf = nfc.ContactlessFrontend()
+        self.connected = False
+        self.com_port = "0"
+        self.driver = ""
+        self.remove_timeout = 0
+
+
+def connect_nfc_reader(nfc_config: NFCConfig):
+    serial_error_message = False
+    while True:
+        try:
+            nfc_config.clf.open(f"com:{nfc_config.com_port}:{nfc_config.driver}")
+            print(f"{nfc_config.driver} NFC reader on COM{nfc_config.com_port} opened.")
+            nfc_config.connected = True
+            return
+        except SerialException:
+            if not serial_error_message:
+                print(f"No {nfc_config.driver} NFC reader detected on COM{nfc_config.com_port}. Waiting until it becomes available.")
+                serial_error_message = True
+                time.sleep(1)
+
 
 def main():
     try:
@@ -20,10 +48,12 @@ def main():
     except tomllib.TOMLDecodeError:
         print("Error reading nfcread.toml.")
         exit(1)
-        
-    COM_PORT = str(nfc_toml['reader']['com_port'])
-    DRIVER = nfc_toml['reader']['driver']
-    REMOVE_TIMEOUT = nfc_toml['reader']['remove_timeout']
+
+    nfc_config = NFCConfig()
+
+    nfc_config.com_port = str(nfc_toml['reader']['com_port'])
+    nfc_config.driver = nfc_toml['reader']['driver']
+    nfc_config.remove_timeout = nfc_toml['reader']['remove_timeout']
 
     tag_commands = nfc_toml['tag_commands']
 
@@ -32,16 +62,14 @@ def main():
     command = None
     old_command = None
 
-    clf = nfc.ContactlessFrontend()
-    if clf.open(f"com:{COM_PORT}:{DRIVER}"):
-        print(f"{DRIVER} NFC reader on COM{COM_PORT} opened.")
-    else:
-        print("No card reader connected.")
-        exit(1)
+    while True:
+        try:
+            # Open the NFC device for the first time, or if it was 
+            # disconnected due to an error.
+            if not nfc_config.connected:
+                connect_nfc_reader(nfc_config)
 
-    try:
-        while True:
-            target = clf.sense(nfc.clf.RemoteTarget("106A"), iterations=1)
+            target = nfc_config.clf.sense(nfc.clf.RemoteTarget("106A"), iterations=1)
             if target:
                 if hasattr(target, "sdd_res"):
                     print(f"Tag scanned. ID: {target.sdd_res.hex()}")
@@ -66,13 +94,13 @@ def main():
                     current_tag = tag_id
                     command = tag_commands.get(tag_id)
                     if command is not None and old_command != command:
-                        remove_timeout = REMOVE_TIMEOUT
+                        remove_timeout = nfc_config.remove_timeout
                         print(f"Executing command: {command}")
                         old_command = command
                         subprocess.Popen(command, shell=True)
                     elif old_command == command and old_command is not None:
                         print("Prior tag scanned. Cancelling exit action.")
-                        remove_timeout = REMOVE_TIMEOUT
+                        remove_timeout = nfc_config.remove_timeout
                     else:
                         print("No command defined for this tag.")
                         remove_timeout = 0
@@ -80,13 +108,13 @@ def main():
                     print("Unsupported tag scanned.")
 
                 # Idle while tag is present.
-                while clf.sense(nfc.clf.RemoteTarget("106A"), iterations=1):
+                while nfc_config.clf.sense(nfc.clf.RemoteTarget("106A"), iterations=1):
                     pass
             else:
                 if current_tag is not None:
                     if command is not None:
-                        if remove_timeout == REMOVE_TIMEOUT:
-                            print(f"Tag removed. Waiting {REMOVE_TIMEOUT} seconds before executing exit action.")
+                        if remove_timeout == nfc_config.remove_timeout:
+                            print(f"Tag removed. Waiting {nfc_config.remove_timeout} seconds before executing exit action.")
                         if remove_timeout > 0:
                             print(f"Remaining time: {remove_timeout}")
                             remove_timeout -= 1
@@ -109,10 +137,16 @@ def main():
                         command = None
                         old_command = None
 
-    except KeyboardInterrupt:
-        print("Exiting.")
-    finally:
-        clf.close()
+        except OSError as e:
+            print(f"Error: {e}")
+            print("Reconnecting NFC reader.")
+            nfc_config.connected = False
+            continue
+        except KeyboardInterrupt:
+            print("Exiting.")
+            break
+
+    nfc_config.clf.close()
 
 
 if __name__ == "__main__":
