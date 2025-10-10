@@ -6,6 +6,8 @@
 # the wallpaper is changed back to the image with the first alphabetical
 # file name in the WALLPAPER_PATH.
 
+# This file is in the public domain (Unlicense). https://unlicense.org
+
 import ctypes
 from glob import glob
 import random
@@ -29,7 +31,6 @@ def change_wallpaper(image_path):
 
 
 def main():
-
     files = []
     for ext in ("*.png", "*.jpg", "*.jpeg"):
         files.extend(glob(WALLPAPER_PATH + ext))

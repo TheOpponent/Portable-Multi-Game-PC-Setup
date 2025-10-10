@@ -1,0 +1,17 @@
+[reader]
+# Set to the COM port number of the reader.
+com_port = 10
+
+# Set to the NFC chipset of the reader. nfcpy currently supports these drivers:
+# rcs380, pn531, pn532, pn533, rcs956, acr122
+driver = "pn532"
+
+# If the tag is removed, wait this many seconds before executing the exit
+# command. If the tag is replaced within this time, reset the timer.
+remove_timeout = 3
+
+[tag_commands]
+# Add keys that match NFC tag IDs with values that contain the command to run.
+# Comments can be added to identify specific IDs.
+0000000000 = "sample1.bat" # Sample card line
+ffffffffff = "sample2.bat" # Different sample card
