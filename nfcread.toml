@@ -10,6 +10,11 @@ driver = "pn532"
 # command. If the tag is replaced within this time, reset the timer.
 remove_timeout = 3
 
+# Set to true to write the IDs of scanned tags not in the tag_commands list
+# to new_tags.txt when the program exits with Ctrl-C. If this file cannot be
+# written, the IDs will be written to the console before exiting.
+log_new_tags = true
+
 [tag_commands]
 # Add keys that match NFC tag IDs with values that contain the command to run.
 # Comments can be added to identify specific IDs.

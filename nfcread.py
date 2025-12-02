@@ -35,7 +35,7 @@ def connect_nfc_reader(nfc_config: NFCConfig):
             if not serial_error_message:
                 print(f"No {nfc_config.driver} NFC reader detected on COM{nfc_config.com_port}. Waiting until it becomes available.")
                 serial_error_message = True
-                time.sleep(1)
+            time.sleep(1)
 
 
 def main():
