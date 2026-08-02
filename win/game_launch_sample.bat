@@ -27,8 +27,9 @@ echo %date% %time% - %gameName% >> %logPath%
 
 nircmd exec hide python "%basePath%\update.py" "%gameName%"
 nircmd exec hide python "%basePath%\wallpaper.py"
-:: You may wish to remove this timeout line if the game has a naturally long launch time.
-timeout /t 2 
+:: This line stalls for 2 seconds, so the pre-launch message can be seen. You may wish to remove this line if the game has a naturally long launch time.
+ping -n 3 127.0.0.1 >nul
+
 nircmd win hide class Shell_TrayWnd
 
 :: Add commands to launch the game below this line.
