@@ -33,6 +33,19 @@ import paho.mqtt.client as paho
 BROKER_IP = "192.168.19.1"
 BROKER_PORT = 1883
 
+# Set to path for the idle loop. This can be a single file or a directory with
+# multiple files, which will be loaded as a playlist. Use mpv config or command
+# line options to control how directories are loaded (e.g. shuffle, still image
+# duration).
+IDLE_PATH = "/home/pi/Pictures/idle/"
+
+# Set to path for game-specific media. Use {title} where the game name will be
+# substituted, which is included in the MQTT message. The default setting 
+# will use PNG files for all games, but this can be replaced with a different
+# file type. To use different types per file, the MQTT message must include the
+# complete file name with extension for all games, and no extension used here.
+GAME_MEDIA_PATH = "/home/pi/Pictures/games/{title}.png"
+
 
 def send_command(command):
     """Issue a command to the mpvsocket based on the MQTT message."""
@@ -66,14 +79,14 @@ def on_message(client, userdata, msg):
     line = msg.payload.decode()
     print(line)
     if line == "^reset":
-        send_command({"command": ["loadfile", "/home/pi/Pictures/idle/"]})
+        send_command({"command": ["loadfile", IDLE_PATH]})
     elif line == "^quit":
         send_command({"command": ["quit"]})
         time.sleep(1)
         os.system("systemctl poweroff")
     else:
         send_command(
-            {"command": ["loadfile", "/home/pi/Pictures/games/" + line + ".png"]}
+            {"command": ["loadfile", GAME_MEDIA_PATH.format(title=line)]}
         )
 
 
