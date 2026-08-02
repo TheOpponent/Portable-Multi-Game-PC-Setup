@@ -1,11 +1,13 @@
 # update.py
+# Part of Lutero. https://github.com/TheOpponent/Lutero
+# This file is in the public domain (Unlicense). https://unlicense.org
+
 # For publishing commands targeting a networked digital signage device running
 # mpvlisten.py on the "lutero/sign" topic. 
 # This script assumes the MQTT broker is on the same local network and accepts
 # anonymous connections.
 
-# Part of Lutero. https://github.com/TheOpponent/Lutero
-# This file is in the public domain (Unlicense). https://unlicense.org
+# Uses paho-mqtt.
 
 import sys
 

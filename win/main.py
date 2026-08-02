@@ -1,6 +1,6 @@
 # Lutero, a monitor program to launch commands via physical methods.
 # https://github.com/TheOpponent/Lutero
-# Lutero is in the public domain (Unlicense). https://unlicense.org
+# This file is in the public domain (Unlicense). https://unlicense.org
 
 # Uses nfcpy to drive an NFC tag reader to continuously scan for
 # supported tags and launch an associated command, and pynput to

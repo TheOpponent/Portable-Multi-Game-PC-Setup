@@ -1,19 +1,23 @@
 #!/usr/bin/python3
 
 # mpvlisten.py
-# Runs on a Raspberry Pi or similar device acting as digital signage, to drive
-# the currently displayed media using MQTT messages on the "lutero/sign" topic.
-# This script runs at boot on the Raspberry Pi and connects to a Unix socket
-# created by mpv --input-ipc-server=/tmp/mpvsocket. 
+# Part of Lutero. https://github.com/TheOpponent/Lutero
+# This file is in the public domain (Unlicense). https://unlicense.org
+
+# Runs on a Raspberry Pi or similar device running mpv acting as digital
+# signage, to drive the currently displayed media using MQTT messages on the
+# "lutero/sign" topic. While the script is written for Linux, it can be adapted
+# for any platform that supports mpv and mpvsocket.
+# This script runs at boot connects to a Unix socket created by
+# mpv --input-ipc-server=/tmp/mpvsocket.
 # It assumes the MQTT broker is on the same local network and accepts anonymous
 # connections.
-#
+
 # Special commands include:
 # "^reset" - Unsets the current image and returns to an idle loop.
 # "^quit" - Shuts the Raspberry Pi down.
 
-# Part of Lutero. https://github.com/TheOpponent/Lutero
-# This file is in the public domain (Unlicense). https://unlicense.org
+# Uses paho-mqtt.
 
 import datetime
 import json
