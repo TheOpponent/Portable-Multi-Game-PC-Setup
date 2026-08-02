@@ -1,26 +1,35 @@
 # update.py
-# Issues a command to the Raspberry Pi digital sign's serial UART using
-# pySerial to load an image with a filename that matches the first
-# argument. If no arguments are provided, send a command to the
-# digital sign to load the idle images collection instead.
+# For publishing commands targeting a networked digital signage device running
+# mpvlisten.py on the "lutero/sign" topic. 
+# This script assumes the MQTT broker is on the same local network and accepts
+# anonymous connections.
 
+# Part of Lutero. https://github.com/TheOpponent/Lutero
 # This file is in the public domain (Unlicense). https://unlicense.org
 
 import sys
 
-import serial
+from paho.mqtt import publish
 
-# Set this to the serial port of your USB to TTL device.
-SERIAL_PORT = "COM1"
+# Set to the IP of the PC running the MQTT broker. Ideally this will be this
+# PC, with the listener setting bound to the IP of the NIC (not localhost)
+# connected to the digital sign or hub.
+BROKER_IP = "192.168.19.1"
+BROKER_PORT = 1883
 
-ser = serial.Serial(SERIAL_PORT, baudrate=115200, timeout=1)
+def main():
+    msgs = []
 
-# If a game name is given as the first command line argument, set the
-# display to that game.
-if len(sys.argv) > 1:
-    ser.write(sys.argv[1].encode())
-else:
-    # If run without arguments, set the digital sign to the idle
-    # collection.
-    ser.write("_reset".encode())
-ser.close()
+    if len(sys.argv) == 1:
+        msgs.append(("lutero/sign", "^reset", 2))
+    elif len(sys.argv) == 2:
+        msgs.append(("lutero/sign", sys.argv[1], 2))
+    else:
+        print("Incorrect number of arguments.")
+        sys.exit()
+
+    publish.multiple(msgs, BROKER_IP, BROKER_PORT)
+
+
+if __name__ == "__main__":
+    main()
