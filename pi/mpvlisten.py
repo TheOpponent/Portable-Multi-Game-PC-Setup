@@ -36,7 +36,7 @@ def send_command(command):
     msg = json.dumps(command).encode() + b"\n"
     while True:
         try:
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client: # type: ignore
                 client.connect("/tmp/mpvsocket")
                 client.send(msg)
                 break
