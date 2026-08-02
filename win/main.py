@@ -1,4 +1,5 @@
 # Lutero, a monitor program to launch commands via physical methods.
+# https://github.com/TheOpponent/Lutero
 # Lutero is in the public domain (Unlicense). https://unlicense.org
 
 # Uses nfcpy to drive an NFC tag reader to continuously scan for
@@ -14,7 +15,7 @@ import sys
 import threading
 import time
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import nfc
@@ -41,7 +42,7 @@ class LaunchInfo:
     button_last_press_time = time.time()
     "Timestamp for the last time a button press was accepted."
 
-    _lock: threading.Lock = threading.Lock()
+    _lock: threading.Lock = field(default_factory=threading.Lock)
     "A `threading.Lock` object, to safely access the button variables."
 
     def stop_button_listening(self):
@@ -52,7 +53,7 @@ class LaunchInfo:
     def start_button_listening(self):
         with self._lock:
             self.button_listening = True
-            
+
     def button_press(self):
         with self._lock:
             self.button_pressed = True
@@ -66,7 +67,7 @@ class LaunchInfo:
 class NFCConfig:
     """Dataclass for NFC reader configuration."""
 
-    clf: nfc.ContactlessFrontend = nfc.ContactlessFrontend()
+    clf: nfc.ContactlessFrontend = field(default_factory=nfc.ContactlessFrontend)
     "`nfc.ContactlessFrontend` object for this reader."
 
     connected: Optional[bool] = None
@@ -304,7 +305,7 @@ def start_button_listener(li: LaunchInfo, button_code):
     return listener
 
 
-def set_scroll_lock(enable: bool, delay: float=0.0):
+def set_scroll_lock(enable: bool, delay: float = 0.0):
     scroll_lock_status = bool(ctypes.WinDLL("User32.dll").GetKeyState(0x91) & 1)
 
     if scroll_lock_status == enable:
@@ -393,11 +394,11 @@ def main():
 
                 button_press_time = time.time()
 
-                # If the button is pressed, launch a random command if no 
-                # command is running, or exit the current command if it is 
+                # If the button is pressed, launch a random command if no
+                # command is running, or exit the current command if it is
                 # running.
                 if not launch_info.button_active and (
-                    button_press_time - launch_info.button_last_press_time > 2
+                    button_press_time - launch_info.button_last_press_time > 1
                 ):
                     subprocess.Popen(
                         get_command_path(commands.get_button_command()), shell=True
@@ -417,8 +418,12 @@ def main():
                         except TimeoutError:
                             print("Exit action timed out. Retrying.")
                             continue
-                    if use_scroll_lock:
-                        set_scroll_lock(True,1.99)
+                    # Workaround: Due to the timing of the button press
+                    # potentially allowing a second press before the next
+                    # time Scroll Lock is toggled, check if the button is
+                    # inactive first before re-enabling Scroll Lock.
+                    if use_scroll_lock and not launch_info.button_active:
+                        set_scroll_lock(True, 0.99)
                     launch_info.button_active = False
                     launch_info.button_last_press_time = button_press_time
 
