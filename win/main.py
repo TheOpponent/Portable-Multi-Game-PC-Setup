@@ -10,6 +10,7 @@ import ctypes
 import os
 import random
 import subprocess
+import sys
 import threading
 import time
 from collections import deque
@@ -20,7 +21,6 @@ import nfc
 import tomllib
 from pynput import keyboard
 from serial import SerialException
-
 
 kbd = keyboard.Controller()
 
@@ -133,9 +133,8 @@ class Commands:
 
             try:
                 with open("button_commands_history.txt", "w") as file:
-                    for i in self.button_commands_history:
-                        file.write(i + "\n")
-            except IOError as e:
+                    file.writelines(i + "\n" for i in self.button_commands_history)
+            except OSError as e:
                 print(f"Error writing button_commands_history.txt: {e}")
 
         return button_command_candidate
@@ -157,22 +156,22 @@ class Commands:
         try:
             with open("config.toml", "rb") as config_file:
                 config = tomllib.load(config_file)
-        except IOError:
+        except OSError:
             print("Error: config.toml not found.")
             if exit_on_error:
-                exit(1)
+                sys.exit(1)
             return False
         except tomllib.TOMLDecodeError as e:
             print(f"Error reading config.toml: {e}")
             if exit_on_error:
-                exit(1)
+                sys.exit(1)
             return False
 
         self.tag_commands = config["tag_commands"]
         if len(self.tag_commands) == 0 and config["reader"]["nfc_enabled"]:
             print("Error: No button commands available.")
             if exit_on_error:
-                exit(1)
+                sys.exit(1)
 
         if config["button"]["button_mode"] == "whitelist":
             self.button_commands_src = config["button"]["whitelist_commands"]
@@ -188,12 +187,12 @@ class Commands:
         else:
             print('Error: button_mode must be one of "whitelist" or "blacklist".')
             if exit_on_error:
-                exit(1)
+                sys.exit(1)
             return False
         if len(self.button_commands_src) == 0 and config["button"]["button_enabled"]:
             print("Error: No button commands available.")
             if exit_on_error:
-                exit(1)
+                sys.exit(1)
             return False
         self.reset_button_commands()
 
@@ -222,7 +221,7 @@ class Commands:
         if errors > 0:
             print(f"{errors} error(s) found in commands.")
             if exit_on_error:
-                exit(1)
+                sys.exit(1)
             return False
         return True
 
@@ -324,18 +323,18 @@ def main():
     try:
         with open("config.toml", "rb") as config_file:
             config = tomllib.load(config_file)
-    except IOError:
+    except OSError:
         print("config.toml not found.")
-        exit(1)
+        sys.exit(1)
     except tomllib.TOMLDecodeError as e:
         print(f"Error reading config.toml: {e}")
-        exit(1)
+        sys.exit(1)
 
     if not config["reader"]["nfc_enabled"] and not config["button"]["button_enabled"]:
         print(
             "Error: At least one of nfc_enabled or button_enabled in config.toml must be true."
         )
-        exit(1)
+        sys.exit(1)
 
     launch_info: LaunchInfo = LaunchInfo()
 
@@ -379,7 +378,7 @@ def main():
                 with open("button_commands_history.txt", "r") as file:
                     for line in file:
                         commands.button_commands_history.append(line.rstrip("\n"))
-            except IOError as e:
+            except OSError as e:
                 print(f"Error reading buttons_commands_history.txt: {e}")
                 print("Using empty button commands history.")
 
@@ -388,40 +387,40 @@ def main():
     while True:
         try:
             # Button loop.
-            if button_enabled:
-                if launch_info.button_pressed:
-                    print("Button pressed.")
-                    launch_info.button_release()
+            if button_enabled and launch_info.button_pressed:
+                print("Button pressed.")
+                launch_info.button_release()
 
-                    button_press_time = time.time()
+                button_press_time = time.time()
 
-                    # If the button is pressed, launch a random command if no command is running,
-                    # or exit the current command if it is running.
-                    if not launch_info.button_active and (
-                        button_press_time - launch_info.button_last_press_time > 2
-                    ):
-                        subprocess.Popen(
-                            get_command_path(commands.get_button_command()), shell=True
-                        )
-                        if use_scroll_lock:
-                            set_scroll_lock(False)
-                        launch_info.button_active = True
-                        launch_info.button_last_press_time = button_press_time
-                    elif launch_info.button_active and (
-                        button_press_time - launch_info.button_last_press_time > 5
-                    ):
-                        exit_action = subprocess.Popen("exit.bat", shell=True)
-                        while True:
-                            try:
-                                exit_action.wait(timeout=3)
-                                break
-                            except TimeoutError:
-                                print("Exit action timed out. Retrying.")
-                                continue
-                        if use_scroll_lock:
-                            set_scroll_lock(True,1.99)
-                        launch_info.button_active = False
-                        launch_info.button_last_press_time = button_press_time
+                # If the button is pressed, launch a random command if no 
+                # command is running, or exit the current command if it is 
+                # running.
+                if not launch_info.button_active and (
+                    button_press_time - launch_info.button_last_press_time > 2
+                ):
+                    subprocess.Popen(
+                        get_command_path(commands.get_button_command()), shell=True
+                    )
+                    if use_scroll_lock:
+                        set_scroll_lock(False)
+                    launch_info.button_active = True
+                    launch_info.button_last_press_time = button_press_time
+                elif launch_info.button_active and (
+                    button_press_time - launch_info.button_last_press_time > 5
+                ):
+                    exit_action = subprocess.Popen("exit.bat", shell=True)
+                    while True:
+                        try:
+                            exit_action.wait(timeout=3)
+                            break
+                        except TimeoutError:
+                            print("Exit action timed out. Retrying.")
+                            continue
+                    if use_scroll_lock:
+                        set_scroll_lock(True,1.99)
+                    launch_info.button_active = False
+                    launch_info.button_last_press_time = button_press_time
 
             # NFC loop.
             if nfc_enabled:
@@ -434,7 +433,7 @@ def main():
                     if not nfc_config.connected:
                         connect_nfc_reader(
                             nfc_config,
-                            blocking=True if nfc_config.connected is None else False,
+                            blocking=nfc_config.connected is None,
                         )
 
                     target = nfc_config.clf.sense(
@@ -491,7 +490,7 @@ def main():
                                     try:
                                         with open("new_tags.txt", "a") as file:
                                             file.write(tag_id + "\n")
-                                    except IOError:
+                                    except OSError:
                                         new_tags_file_write_error = True
                                         print(
                                             "Error writing to new_tags.txt. New tag ID(s) will be written to console when the program exits."
