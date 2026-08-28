@@ -1,18 +1,18 @@
-# wallpaper.py
+# wallpaper.pyw
 # Changes the current desktop wallpaper on a Windows PC from the image files
 # in a given folder. If a command line argument is provided, change the
 # wallpaper to that file name in the WALLPAPER_PATH. Otherwise, change the 
 # wallpaper to a random image file in that path. After a 10 second delay,
 # the wallpaper is changed back to the image with the first alphabetical
 # file name in the WALLPAPER_PATH.
-
+# Part of Lutero. https://github.com/TheOpponent/Lutero
 # This file is in the public domain (Unlicense). https://unlicense.org
 
 import ctypes
-from glob import glob
 import random
 import sys
 import time
+from glob import glob
 
 # Set this to the number of seconds before changing to the default
 # wallpaper.
@@ -27,7 +27,7 @@ def change_wallpaper(image_path):
         ctypes.windll.user32.SystemParametersInfoW(20,0,image_path,3)
     except Exception as e:
         print(f"Error changing wallpaper: {e}")
-        exit(1)
+        sys.exit(1)
 
 
 def main():

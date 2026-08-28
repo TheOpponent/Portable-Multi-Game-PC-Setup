@@ -1,4 +1,5 @@
 [reader]
+# This section allows common NFC readers to be used.
 nfc_enabled = true
 
 # Set to the COM port number of the reader. Set to 0 to auto detect. Auto 
@@ -28,6 +29,7 @@ launch_pseudorandom_command_on_new_tag = false
 
 [tag_commands]
 # Add keys that match NFC tag IDs with values that contain the command to run.
+# Relative paths resolve to the "programs" subdirectory where main.py is run.
 # Comments can be added to identify specific IDs.
 0000000000 = "sample1.bat" # Sample card line
 ffffffffff = "sample2.bat" # Different sample card
@@ -80,7 +82,7 @@ button_commands_history = 50
 button_commands_random_retries = 10
 
 # The Scroll Lock light can be used to indicate if a command can be launched 
-# with the button. It will turn on when no command is active and and turn off
+# with the button. It will turn on when no command is active and turn off
 # when the button is pressed, as the command launches. It will also turn off
 # when a NFC tag is used to launch a command to indicate that the button is
 # temporarily disabled, until the tag is removed.

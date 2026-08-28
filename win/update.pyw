@@ -1,4 +1,4 @@
-# update.py
+# update.pyw
 # Part of Lutero. https://github.com/TheOpponent/Lutero
 # This file is in the public domain (Unlicense). https://unlicense.org
 

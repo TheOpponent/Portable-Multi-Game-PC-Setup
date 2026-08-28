@@ -312,8 +312,7 @@ def set_scroll_lock(enable: bool, delay: float = 0.0):
         return
 
     def _toggle():
-        kbd.press(keyboard.Key.scroll_lock)
-        kbd.release(keyboard.Key.scroll_lock)
+        kbd.tap(keyboard.Key.scroll_lock)
 
     timer = threading.Timer(delay, _toggle)
     timer.daemon = True
