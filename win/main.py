@@ -425,6 +425,7 @@ def main():
                         set_scroll_lock(True, 0.99)
                     launch_info.button_active = False
                     launch_info.button_last_press_time = button_press_time
+                time.sleep(0.01)
 
             # NFC loop.
             if nfc_enabled:
