@@ -3,6 +3,9 @@
 nircmd setcursor 1920 0
 nircmd win hide class Shell_TrayWnd
 
+:: This line launches input_monitor.pyw, which simulates the button press that causes the game to
+:: exit after a timeout expires with no controller inputs. If you want to keep the game running
+:: indefinitely, remove this line and line 26.
 for /f %%G in ('powershell -NoProfile -Command "(Start-Process -FilePath 'pythonw.exe' -ArgumentList '%USERPROFILE%\Desktop\Lutero\input_monitor.pyw' -PassThru).Id"') do set PID=%%G
 
 :: Set these variables accordingly.
@@ -19,6 +22,7 @@ set "logPath=%USERPROFILE%\Desktop\log.txt"
 	:: Remove this line if you don't wish to keep logs.
     echo echo %%date%% %%time%% - Stopped ^>^> %logPath%
 
+	:: If you removed the input_monitor.pyw line above, remove this line too.
 	echo taskkill /f /pid %PID%
 	echo "%basePath%\update.pyw"
 	:: Change the argument of taskkill to the game's executable.
@@ -43,7 +47,7 @@ start /b "" "%basePath%\wallpaper.pyw"
 ping -n 3 127.0.0.1 >nul
 
 :: Add commands to launch the game below this line.
-:: Steam games can be launched with `steam://rungameid/#######`, using the app ID found in
+:: Steam games can be launched with `start steam://rungameid/#######`, using the app ID found in
 :: Properties > Updates.
 :: For plain executables, you may need to use the form `start /b "" "C:\path\to\game.exe"`.
 :: See https://ss64.com/nt/start.html
